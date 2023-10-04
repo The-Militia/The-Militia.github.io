@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NationStates API Web App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      background-color: #420000;
+      text-align: center;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #420000;
+      color: #fff;
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    textarea {
+      width: 70%;
+      max-width: 300px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .input-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+
+    #status {
+      margin-top: 10px;
+    }
+
+    #nation-list {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 onclick="window.location.href='https://www.nationstates.net/region=the_militia'">The Militia</h1>
+  </header>
+
+  <div class="input-container">
+    <label for="region-name">Enter Region Name:</label>
+    <input type="text" id="region-name" placeholder="Region Name">
+    <br>
+    <label for="nation-name">Enter Your User-Agent:</label>
+    <input type="text" id="nation-name" placeholder="User-Agent (3+ characters required)">
+    <br>
+    <button onclick="startFetching()" id="start-button" disabled>Start</button>
+    <button onclick="stopFetching()" id="stop-button" style="display: none;">Stop</button>
+    <div id="status"></div>
+    <div id="nation-list"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('nation-name').addEventListener('input', function() {
+      const startButton = document.getElementById('start-button');
+      if (this.value.length >= 3) {
+        startButton.disabled = false;
+      } else {
+        startButton.disabled = true;
+      }
+    });
+  </script>
+</body>
+</html>
