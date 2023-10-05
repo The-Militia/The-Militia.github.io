@@ -1,97 +1,256 @@
-let initialNationList = [];
-let newNations = [];
-let intervalId;
-let running = false;
+let nationName = '';
+let lastClickTime = 0;
+const buttonCooldown = 2000; // 2 second cooldown
 
-// Enable or disable the Start button based on the User-Agent input
-document.querySelector("#nation-name").addEventListener("input", function() {
-  const startButton = document.querySelector("#start-button");
-  startButton.disabled = this.value.trim().length <= 3; // Disable if User-Agent has 3 or fewer characters
+function saveNationName() {
+  if (isCooldownActive()) return;
+  nationName = document.getElementById('nationNameInput').value.trim();
+  document.getElementById('nationNameInput').value = '';
+  updateButtonStates();
+}
+
+
+function searchUpdates() {
+  if (isCooldownActive()) return;
+  const region = document.getElementById('searchInput').value.trim();
+  document.getElementById('searchInput').value = '';
+  startCooldown();
+
+  const userAgent = nationName;
+  const upurl = `https://www.nationstates.net/cgi-bin/api.cgi?region=${region}&q=lastminorupdate+lastmajorupdate`;
+  const upOptions = {
+    method: 'GET',
+    headers: {
+     'User-Agent': `the watchtower - update times, used by ${userAgent}`,
+    },
+  };
+
+  fetch(upurl, upOptions)
+    .then(response => response.text())
+    .then(data => {
+      const parsedData = new DOMParser().parseFromString(data, 'text/xml');
+      const majorUpdate = parsedData.querySelector('LASTMAJORUPDATE').textContent;
+      const minorUpdate = parsedData.querySelector('LASTMINORUPDATE').textContent;
+
+      const majorUpdateDate = new Date(parseInt(majorUpdate) * 1000).toLocaleString();
+      const minorUpdateDate = new Date(parseInt(minorUpdate) * 1000).toLocaleString();
+
+      document.getElementById('result').innerHTML = `
+        <p>Major Update: ${majorUpdateDate}</p>
+        <p>Minor Update: ${minorUpdateDate}</p>
+      `;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('result').innerHTML = '<p>Error occurred while fetching update times.</p>';
+    });
+}
+
+function getRegions() {
+  if (isCooldownActive()) return;
+  startCooldown();
+  
+  const userAgent = nationName;
+  const geturl = 'https://www.nationstates.net/cgi-bin/api.cgi?q=regionsbytag;tags=fascist,governorless,-password';
+  const getOptions = {
+    method: 'GET',
+    headers: {
+     'User-Agent': `the watchtower - cute fascist regions, used by ${userAgent}`,
+    },
+  };
+
+  fetch(geturl, getOptions)
+    .then(response => response.text())
+    .then(data => {
+      const parsedData = new DOMParser().parseFromString(data, 'text/xml');
+      const regions = parsedData.querySelector('REGIONS').textContent.split(',');
+
+      const regionList = document.getElementById('regionList');
+      regionList.innerHTML = '';
+
+      regions.forEach(region => {
+        const regionName = region.trim();
+        const listItem = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = `https://www.nationstates.net/region=${regionName}`;
+        link.textContent = `(${regionName})`;
+        listItem.appendChild(link);
+        regionList.appendChild(listItem);
+      });
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      const regionList = document.getElementById('regionList');
+      regionList.innerHTML = '<p>Error occurred while fetching regions.</p>';
+    });
+}
+
+function updateButtonStates() {
+  const searchButton = document.getElementById('searchButton');
+  const regionsButton = document.getElementById('regionsButton');
+  const findButton = document.getElementById('findButton');
+  const autologinButton = document.getElementById('autoStart');
+
+  const enableButtons = nationName !== '';
+
+  searchButton.disabled = !enableButtons;
+  regionsButton.disabled = !enableButtons;
+  findButton.disabled = !enableButtons;
+  if (autoStartButton.textContent === 'Start') {
+    autoStartButton.disabled = !enableButtons;
+  }
+}
+
+
+function getRegionInfo() {
+  if (isCooldownActive()) return;
+  startCooldown();
+
+  const regionNameInput = document.getElementById('regionNameInput');
+  const regionName = regionNameInput.value.trim();
+
+  if (!regionName) {
+    document.getElementById('regionInfo').innerHTML = '<p>Please enter a region name.</p>';
+    return;
+  }
+
+  const userAgent = nationName;
+  const submurl = `https://www.nationstates.net/cgi-bin/api.cgi?region=${regionName}&q=flag+delegatevotes+bannerurl+governor+numnations+delegate+delegateauth`;
+  const submOptions = {
+    method: 'GET',
+    headers: {
+     'User-Agent': `the watchtower - submissive and raidable, used by ${userAgent}`,
+    },
+  };
+
+  fetch(submurl, submOptions)
+    .then(response => response.text())
+    .then(data => {
+      const parsedData = new DOMParser().parseFromString(data, 'text/xml');
+      const governor = parsedData.querySelector('GOVERNOR').textContent;
+      const delegate = parsedData.querySelector('DELEGATE').textContent;
+      const delegateVotes = parseInt(parsedData.querySelector('DELEGATEVOTES').textContent);
+      const flagURL = parsedData.querySelector('FLAG').textContent;
+      const bannerURL = parsedData.querySelector('BANNERURL').textContent;
+      const delegateAuth = parsedData.querySelector('DELEGATEAUTH').textContent;
+      const endorsements = delegateVotes === 0 ? 0 : delegateVotes - 1;
+
+      const regionInfo = document.getElementById('regionInfo');
+      regionInfo.innerHTML = `
+        <div class="region-info">
+          <div class="flag-container">
+            <img src="${flagURL}" class="flag" alt="Flag">
+          </div>
+          <img src="https://www.nationstates.net${bannerURL}" class="banner" alt="Banner">
+          <div>
+            <h3><a id="regionLink" href="https://www.nationstates.net/region=${regionName}" target="_blank">${regionName}</a></h3>
+            <p>Delegate: ${delegate === '0' ? 'None' : `<a href="https://www.nationstates.net/nation=${delegate}" target="_blank">${delegate}</a>`}</p>
+            <p>Number of Nations: ${parseInt(parsedData.querySelector('NUMNATIONS').textContent)}</p>
+            <p>Governor: <span class="${governor === '0' ? 'red' : 'green'}">${governor === '0' ? 'None' : governor}</span></p>
+            <p>Raidable: ${delegateAuth.includes('X') ? 'Yes :D' : 'Sadly No :('}</p>
+            <p>Endorsements: ${endorsements}</p>
+          </div>
+        </div>
+      `;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('regionInfo').innerHTML = '<p>Error occurred while fetching region info.</p>';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const autoStartButton = document.getElementById('autoStartButton');
+  autoStartButton.addEventListener('click', startAutologin);
+
+  const savePasswordsButton = document.getElementById('savePasswords');
+  savePasswordsButton.addEventListener('click', savePasswords);
 });
 
-function startFetching() {
-  const regionName = document.querySelector("#region-name").value;
-  const nationName = document.querySelector("#nation-name").value;
-  const startButton = document.querySelector("#start-button");
-  const stopButton = document.querySelector("#stop-button");
 
-  if (regionName && !running) {
-    // Fetch the initial nation list
-    fetchAPIAndDisplay(regionName, nationName);
+let autologinRunning = false;
+let autologinTimeouts = [];
 
-    // Set an interval to fetch updates
-    intervalId = setInterval(() => {
-      fetchAPIAndDisplay(regionName, nationName);
-    }, 700);
+function startAutologin() {
+  if (autologinRunning) {
+    autologinRunning = false;
+    autologinTimeouts.forEach(timeout => clearTimeout(timeout));
+    autologinTimeouts = [];
+    document.getElementById('autologinStatus').textContent = 'Autologin canceled.';
+    return;
+  }
 
-    running = true;
-    document.querySelector("#status").textContent = "Running...";
-    startButton.disabled = true;
-    stopButton.style.display = "block";
-  } else {
-    console.error("Region name is required or the app is already running.");
+  autologinRunning = true;
+  document.getElementById('autologinStatus').textContent = 'Autologin in progress...';
+
+  const nationListTextArea = document.getElementById('nationList');
+  const nationList = nationListTextArea.value.split('\n');
+  const userAgent = nationName; // Replace with your user agent
+  const autologinDelay = 800; // 800 milliseconds
+
+  nationList.forEach((entry, index) => {
+    const [nationName, password] = entry.split(',').map(item => item.trim());
+
+    if (autologinRunning && nationName && password) {
+      const timeout = setTimeout(() => {
+        const pingURL = `https://www.nationstates.net/cgi-bin/api.cgi?nation=${nationName}&q=ping`;
+
+        const pingOptions = {
+          method: 'GET',
+          headers: {
+            'X-Password': password,
+            'User-Agent': `the watchtower - autologin, used by ${userAgent}`,
+          },
+        };
+
+        fetch(pingURL, pingOptions)
+          .then(response => response.text())
+          .then(pingResponse => {
+            console.log(`${nationName}:`, pingResponse);
+          })
+          .catch(error => {
+            console.error(`Error pinging nation ${nationName}:`, error);
+          });
+
+        if (index === nationList.length - 1) {
+          document.getElementById('autologinStatus').textContent = 'Autologin finished.';
+          autologinRunning = false;
+        }
+      }, autologinDelay * index);
+
+      autologinTimeouts.push(timeout);
+    }
+  });
+}
+
+
+
+
+function savePasswords() {
+  const nationListTextArea = document.getElementById('nationList');
+  const nationList = nationListTextArea.value;
+  localStorage.setItem('nationPasswords', nationList);
+  console.log('Passwords saved.');
+}
+
+
+function loadPasswords() {
+  const savedPasswords = localStorage.getItem('nationPasswords');
+  if (savedPasswords) {
+    const nationListTextArea = document.getElementById('nationList');
+    nationListTextArea.value = savedPasswords;
   }
 }
 
-function stopFetching() {
-  const startButton = document.querySelector("#start-button");
-  const stopButton = document.querySelector("#stop-button");
 
-  clearInterval(intervalId);
-  running = false;
-  document.querySelector("#status").textContent = "Stopped.";
-  startButton.disabled = false;
-  stopButton.style.display = "none";
+window.onload = loadPasswords;
+
+function isCooldownActive() {
+  const currentTime = new Date().getTime();
+  return currentTime - lastClickTime < buttonCooldown;
 }
 
-async function fetchAPIAndDisplay(regionName, nationName) {
-  const apiUrl = `https://www.nationstates.net/cgi-bin/api.cgi?region=${regionName}&q=wanations+lastupdate`;
-
-  try {
-    const response = await fetch(apiUrl, {
-      headers: {
-        "User-Agent": nationName
+function startCooldown() {
+  lastClickTime = new Date().getTime();
       }
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data, "text/xml");
-    const nationList = xmlDoc.querySelector("UNNATIONS").textContent.split(",");
-
-    if (initialNationList.length === 0) {
-      // This is the first request, so save the initial nation list
-      initialNationList = nationList;
-    } else {
-      // Compare with the initial list to find new nations
-      newNations = nationList.filter((nation) => !initialNationList.includes(nation));
-
-      // Update the web page with new nation names and links
-      if (newNations.length > 0) {
-        const nationDiv = document.querySelector("#nation-list");
-        newNations.forEach((nation) => {
-          if (!document.querySelector(`#nation-${nation}`)) {
-            // Check if the nation element already exists
-            const nationLink = document.createElement("a");
-            nationLink.href = `https://www.nationstates.net/nation=${nation}#composebutton`;
-            nationLink.textContent = nation;
-            nationLink.id = `nation-${nation}`;
-            nationDiv.appendChild(nationLink);
-            nationDiv.appendChild(document.createElement("br"));
-
-            // Open a new tab for the nation's link
-            window.open(`https://www.nationstates.net/nation=${nation}#composebutton`, "_blank");
-          }
-        });
-      }
-    }
-    document.querySelector("#status").textContent = "Running...";
-  } catch (error) {
-    console.error("Error fetching data: ", error);
-    document.querySelector("#status").textContent = "Error fetching data.";
-  }
-}
+      
