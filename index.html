@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>The Watchtower</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href=https://media.discordapp.net/attachments/1050163789024206878/1140922414247714906/PGMjbZnT.png>
+  <style>
+    header {
+      background-color: #420000;
+      text-align: center;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #420000;
+      color: #fff;
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    button {
+      font-size: 14px;
+    }
+
+    
+    .region-info {
+      display: flex;
+      flex-direction: column; 
+      align-items: flex-start; 
+      margin: 5px 0;
+      position: relative; 
+    }
+
+    .flag-container {
+      display: flex;
+      justify-content: left;
+      width: 100%; 
+    }
+
+    .region-info img.flag {
+      width: 120px; 
+      height: auto; ;
+      border-radius: 10px; 
+      margin-bottom: 5px;
+    }
+
+    .region-info img.banner {
+      width: 400px; 
+      height: auto; 
+      max-width: 100%; 
+      max-height: 200px; 
+      border-radius: 10px; 
+    }
+
+    
+    .region-info h3 {
+      text-transform: capitalize;
+    }
+
+    
+    .region-info div {
+      margin-left: 10px;
+    }
+
+    .red {
+      color: red;
+    }
+
+    .green {
+      color: green;
+    }
+
+    nput-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 70%; 
+      max-width: 300px; /* Set a specific max width for the textarea */
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      font-size: 14px; /* Adjust the font size for better mobile appearance */
+    }
+    
+    
+
+    
+    a {
+      color: #420000;
+      text-decoration: none;
+
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 onclick="window.location.href='https://www.nationstates.net/region=the_militia'">The Militia</h1>
+  </header>
+  <section>
+    <h2>Enter Your Nation Name</h2>
+    <input type="text" id="nationNameInput">
+    <button onclick="saveNationName()">Set User-Agent</button>
+  </section>
+  <section>
+    <h2>Search for Update Times</h2>
+    <input type="text" id="searchInput">
+    <button onclick="searchUpdates()" id="searchButton" disabled>Get Times</button>
+    <div id="result"></div>
+  </section>
+  <section>
+    <h2>Submissive and Raidable?</h2>
+    <input type="text" id="regionNameInput">
+    <button onclick="getRegionInfo()" id="findButton" disabled>Get Region Info</button>
+    <div id="regionInfo">
+      <h3 id="regionName"><a id="regionLink" href="" target="_blank"></a></h3>
+      <div>
+        <p id="delegate"></p>
+        <p id="numNations"></p>
+        <p id="governor"></p>
+        <p id="raidable"></p>
+        <p id="endorsements"></p>
+      </div>
+    </div>
+    <h2>Autologin</h2>
+  
+  <label for="nationList">Nation List (Format: Nation Name, Password)</label><br>
+  <textarea id="nationList" rows="5" cols="50"></textarea><br>
+  
+  <button id="autoStartButton" disabled>Start</button>
+  <button id="savePasswords">Save Passwords</button>
+  
+  <p id="autologinStatus"></p>
+  
+  
+  
+  <section>
+    <h2>A List of Governorless Fash Regions</h2>
+    <button onclick="getRegions()" id="regionsButton" disabled>Show Regions</button>
+    <ul id="regionList"></ul>
+      </section>
+  <script src="script.js"></script>
+</body>
+        </html>
+  
